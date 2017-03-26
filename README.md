@@ -1,39 +1,32 @@
 # DownloadStationBot
 다운로드 받는 파일을 자동으로 정리하는 스크립트를 만들어 봤습니다.
-
 사용하실 분이 있을지 모르겠지만 공유 해봅니다~
-
- 
-
+<br/><br/>
 파이썬이라는 걸 처음 알아가며
-
 여기저기 복사 붙여 넣기 / 예외처리 안함 / 로그 대충 생성으로 인해 많이 지저분 합니다.
-
 그리고 다운로드 받는 소스가 TV쇼 인지 영화인지 구분할 방법을 못찾아서…
-
- 
-
+<br/><br/>
 티프리카 RSS 등록 후 사용한다는 기준 ( 즉 다운로드 받는 URL에  tfreeca 가 존재해야 함)에서만 동작합니다.
 
 (제가 사용하므로….)
 
 ex) http://xxxxxxx/tfreeca/rss.php?bo_table=tdrama&k=720p-next&page=1
 
- 
+ <br/><br/>
 
 이래 저래 제약 사항도 많고 잘 동작할지도 모르겠지만 의견 주시면 반영하거나 직접 수정해 주셔도 됩니다. ㅋ
 
 그리고 분류할 좋은 방법 있으시면 알려주세요~
 
- 
+ <br/><br/>
 
  
 
-파일 다운로드
+<h2>파일 다운로드</h2>
 
 http://daewoo.duckdns.org:8081/07_Share/NAS/XPEnology/DownloadStationBot.tar
 
-파일 설명 
+<h3>파일 설명 </h3>
 
 DownloadStationBot.sh         : 시놀 작업 관리자에 등록할 스크립트
 
@@ -53,7 +46,7 @@ FOLDER_LIST.tmp                 : 다운로드 받는 파일이 단일 파일이
 
  
 
-사용 방법
+<h2>사용 방법</h2>
 
 1. 파일을 적당한 경로에 압축 해제
 
@@ -77,7 +70,7 @@ ex) cd /volume1/homes/xxx/DownloadStationBot;./DownloadStationBot.sh
 
  
 
-기능 / 동작 방식
+<h2>기능 / 동작 방식</h2>
 
 1. 티프리카 RSS를 통해서 다운 받는 경우만 동작
 
@@ -105,7 +98,7 @@ ex) cd /volume1/homes/xxx/DownloadStationBot;./DownloadStationBot.sh
 
  
 
-참고 1
+<h2>참고 1</h2>
 
 subliminal 설치는 2번까지만 하면됩니다. (3번은 수동으로 받을때 테스트해보시면 됩니다.)
 
@@ -126,7 +119,7 @@ cd /tmp/subliminal
 
  
 
-참고 2
+<h2>참고 2</h2>
 
 다운로드 스테이션 작업 정리시 오류 나서 찾아보니
 
@@ -140,6 +133,6 @@ ssh에서는 os.mkdirs 같은 명령이 먹는데 시놀 작업 관리자 등록
 
  
 
-참고 3
+<h2>참고 3</h2>
 
 헤놀 6.1에서 혼자서만 테스트 해봤고 저도 실 사용기간 거의 없습니다;;;
