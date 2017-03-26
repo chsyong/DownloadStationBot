@@ -13,6 +13,9 @@ import datetime
 import shutil
 import logging
 import logging.handlers
+import urllib
+import psutil
+import traceback
 from datetime import datetime
 
 global IP           
@@ -38,7 +41,7 @@ DEFAULT_URL = "http://" + IP + ":" + PORT + "/webapi/"
 INFO_API="SYNO.API.Info"
 AUTH_API="SYNO.API.Auth"
 TASK_API="SYNO.DownloadStation.Task"
-FILE_API="SYNO.FileStation"
+FILE_API="SYNO.FileStation.CopyMove"
 
 today_date = datetime.today().strftime('%Y%m%d')
 log = logging.getLogger('LOGGER.')
@@ -59,7 +62,7 @@ def create_directory(PATH, REAL_TITLE) :
         log.info(REAL_TITLE + " Task (create) : CREATED DIR : " + PATH + REAL_TITLE)
         log.info("------------------------------------------------------------------------------------------------------------------")
 
-def move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE) :
+def move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2) :
     log.info(TITLE + " Task (move file) : search path :  " + TO_PATH)
     log.info(TITLE + " Task (move file) : search folder :  " + REAL_TITLE)
     log.info(TITLE + " Task (move file) : source folder :  " + DOWNLOAD_PATH)
@@ -67,14 +70,42 @@ def move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE) :
         d for d in (os.path.join(TO_PATH, d1) for d1 in os.listdir(TO_PATH))
         if os.path.isdir(d)
     ]
+    FLAG = 1
     for d in directory_list :
         if d.find(REAL_TITLE) != -1 :
+            FLAG = FLAG + 1
             log.info(TITLE + " Task (move file) : target folder :  " + d)
             log.info(TITLE + " Task (move file) : STARTING  FROM : " + DOWNLOAD_PATH + TITLE + " TO : " + d + "/" + TITLE)
             result = os.popen("mv \"" + DOWNLOAD_PATH + TITLE + "\" \"" + d + "/" + TITLE +"\"")
+
+            #SOURCE = DOWNLOAD_PATH + TITLE
+            #TEMP = SOURCE.split("/",2)
+            #TEMP2 = TEMP[1].lstrip("volume")
+            #int(TEMP2)
+            #SOURCE = "/" + TEMP[2]
+            #SOURCE = "/homes/a.mp4"
+            #EnS = urllib.quote(SOURCE.encode('utf-8'), '/:')
+
+            #TARGET = d + "/" + TITLE
+            #TEMP = TARGET.split("/",2)
+            #TEMP2 = TEMP[1].lstrip("volume")
+            #int(TEMP2)
+            #TARGET = "/" + TEMP[2]
+            #TARGET = "/homes/b.mp4"
+            #EnT = urllib.quote(TARGET.encode('utf-8'), '/:')
+
+            #log.info("EnS : " + EnS)
+            #log.info("EnT : " + EnT)
+            #response = req2.get(DEFAULT_URL + "entry.cgi?api=" + FILE_API + "&version=" + str(FILE_VERSION) + "&method=start&path=" + EnS + "&dest_folder_path=" + EnT ) 
+            #response = req2.get(DEFAULT_URL + "entry.cgi?api=" + FILE_API + "&version=" + str(FILE_VERSION) + "&method=start&path=\"" + DOWNLOAD_PATH + TITLE  + "\"&dest_folder_path=\"" +  d + "/" + TITLE +"\"") 
+            #response = req2.get(DEFAULT_URL + "entry.cgi?api=" + FILE_API + "&version=" + str(FILE_VERSION) + "&method=start&path="+EnS+"&dest_folder_path="+EnT+"&remove_src=true") 
+            #print response.text
             log.info("------------------------------------------------------------------------------------------------------------------")
             log.info(TITLE + " Task (move file) : FINISHED  FROM : " + DOWNLOAD_PATH + TITLE + " TO : " + d + "/" + TITLE)
             log.info("------------------------------------------------------------------------------------------------------------------")
+            os.popen("synoindex -A \"" + TO_PATH  + "\"")
+    if FLAG == 1 :
+        log.info(TITLE + " Task (move file) : not found target folder : " + REAL_TITLE)
 
 def move_folder(DOWNLOAD_PATH, PATH, TITLE) :
     log.info(TITLE + " Task (move folder) : source folder :  " + DOWNLOAD_PATH)
@@ -84,6 +115,7 @@ def move_folder(DOWNLOAD_PATH, PATH, TITLE) :
     log.info("------------------------------------------------------------------------------------------------------------------")
     log.info(TITLE + " Task (move folder) : FINISHED FROM : " + DOWNLOAD_PATH + " TO : " + PATH )
     log.info("------------------------------------------------------------------------------------------------------------------")
+    os.popen("synoindex -A \"" + PATH + "\"")
 
 def main() :
     # LOG Setting
@@ -101,7 +133,7 @@ def main() :
     log.info("START")
     req=requests.Session()
     log.info("Request DS INFO : " + DEFAULT_URL + "query.cgi?api=" + INFO_API + "&version=1&method=query&query=" + AUTH_API + "," + TASK_API + "," + FILE_API)
-    response = req.get(DEFAULT_URL + "query.cgi?api=" + INFO_API + "&version=1&method=query&query=" + AUTH_API + "," + TASK_API + "," + FILE_API) 
+    response = req.get(DEFAULT_URL + "query.cgi?api=" + INFO_API + "&version=1&method=query&query=" + AUTH_API + "," + TASK_API ) 
     log.info("Response DS INFO : " + response.text)
     data = response.json()
     AUTH_PATH=data['data'][AUTH_API]['path']
@@ -109,10 +141,24 @@ def main() :
     TASK_PATH=data['data'][TASK_API]['path']
     TASK_VERSION=data['data'][TASK_API]['maxVersion']
 
+
+    req2=requests.Session()
+    log.info("Request DS INFO : " + DEFAULT_URL + "query.cgi?api=" + INFO_API + "&version=1&method=query&query=" + AUTH_API + "," + FILE_API)
+    response = req2.get(DEFAULT_URL + "query.cgi?api=" + INFO_API + "&version=1&method=query&query=" + AUTH_API + "," + FILE_API) 
+    data = response.json()
+    log.info("Response DS INFO : " + response.text)
+    FILE_PATH=data['data'][FILE_API]['path']
+    FILE_VERSION=data['data'][FILE_API]['maxVersion']
+
+
     # Login
     log.info("LOGIN")
     log.info("Request Login : " + DEFAULT_URL + AUTH_PATH + "?api=" + AUTH_API + "&version=" + str(AUTH_VERSION) + "&method=login&account=" + ACCOUNT + "&passwd=" + PASSWORD + "&session=DownloadStation&format=cookie")
     response = req.get(DEFAULT_URL + AUTH_PATH + "?api=" + AUTH_API + "&version=" + str(AUTH_VERSION) + "&method=login&account=" + ACCOUNT + "&passwd=" + PASSWORD + "&session=DownloadStation&format=cookie")
+    log.info("Response Login : " + response.text)
+
+    log.info("Request Login : " + DEFAULT_URL + AUTH_PATH + "?api=" + AUTH_API + "&version=" + str(AUTH_VERSION) + "&method=login&account=" + ACCOUNT + "&passwd=" + PASSWORD + "&session=FileStation&format=cookie")
+    response = req2.get(DEFAULT_URL + AUTH_PATH + "?api=" + AUTH_API + "&version=" + str(AUTH_VERSION) + "&method=login&account=" + ACCOUNT + "&passwd=" + PASSWORD + "&session=FileStation&format=cookie")
     log.info("Response Login : " + response.text)
 
     # Get DS Task List
@@ -257,17 +303,18 @@ def main() :
                     REAL_TITLE=TITLE[0:TEMP]
                     if CATEGORY == 'tdrama' :
                         TO_PATH=CONFIG.GetTdramaPath()
-                        move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE)
+                        move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2)
                         FLAG=FLAG+1
                     elif CATEGORY == 'tent' :
                         TO_PATH=CONFIG.GetTentPath()
-                        move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE)
+                        move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2)
                         FLAG=FLAG+1
                     elif CATEGORY == 'tv' :
                         TO_PATH=CONFIG.GetTvPath()
-                        move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE)
+                        move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2)
                         FLAG=FLAG+1
-                  except : 
+                  except Exception:
+                      print(traceback.format_exc())
                       log.info(TITLE + " Task (move) : This TV SHOW don't have E(episode tag) and Failed move : " + TITLE)
                 # TV 제외 분석 불가는 파일 이름과 동일 한 폴더로 이동
                 elif FLAG == 1 :
@@ -276,7 +323,7 @@ def main() :
 
                     if CATEGORY == 'tmovie' :
                         TO_PATH=CONFIG.GetTmoviePath()
-                        move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE)
+                        move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2)
                         log.info(TITLE + " Task (move) : (single) subtitle downloading to " + TO_PATH + REAL_TITLE )
                         os.system("/bin/subliminal download -l ko \"" + TO_PATH + REAL_TITLE + "\"* >> ./DownloadStationBot-" + str(today_date) + ".log")
                         log.info(TITLE + " Task (move) : (single) subtitle downloaded to " + TO_PATH + REAL_TITLE )
@@ -290,12 +337,50 @@ def main() :
                     TASK_ID=task['id']
                     response = req.get(DEFAULT_URL + TASK_PATH + "?api=" + TASK_API + "&version=" + str(TASK_VERSION) + "&method=delete&id=" + TASK_ID + "&force_complete=false")
 
-              # 사용자 폴더 지정 다운로드 작업에 대해서도 자막 다운로드
+              # 사용자 폴더 지정 다운로드 작업
               else :
-                  log.info(TITLE + " Task (just sub) : (user) subtitle downloading to " + DOWNLOAD_PATH + TITLE)
-                  os.system("/bin/subliminal download -l ko \"" + DOWNLOAD_PATH + TITLE + "\"* >> ./DownloadStationBot-" + str(today_date) + ".log")
-                  log.info(TITLE + " Task (just sub) : (user) subtitle downloading to " + DOWNLOAD_PATH + TITLE)
+                  log.info(TITLE + " Task : user definition path, finished download")
+                  TASK_ID=task['id']
+                  response = req.get(DEFAULT_URL + TASK_PATH + "?api=" + TASK_API + "&version=" + str(TASK_VERSION) + "&method=delete&id=" + TASK_ID + "&force_complete=false")
+                  log.info(TITLE + " Task : user definition path, finished download and remove task in download station")
+            # tfreeca 는 아니지만 TV show의 경우 검색한번 해봄
+            elif TITLE.find(".E") != -1 and STATUS.find("finished") != -1 :
+                log.info(TITLE + " Task (no tfreeca) :  not from tfreeca, search ")
+                TEMP=TITLE.find(".E")
+                CHECK_STRING=TITLE[TEMP+2:TEMP+4]
+                log.info(TITLE + " Task (no tfreeca) : TV " + CHECK_STRING + " episode validated")
+                try :
+                  int(CHECK_STRING);
+                  REAL_TITLE=TITLE[0:TEMP]
+                  DOWNLOAD_PATH=CONFIG.GetDownloadPath()
+                  TO_PATH=CONFIG.GetTdramaPath()
+                  move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2)
+                  TO_PATH=CONFIG.GetTentPath()
+                  move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2)
+                  TO_PATH=CONFIG.GetTvPath()
+                  move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2)
+                  TASK_ID=task['id']
+                  response = req.get(DEFAULT_URL + TASK_PATH + "?api=" + TASK_API + "&version=" + str(TASK_VERSION) + "&method=delete&id=" + TASK_ID + "&force_complete=false")
+                except :
+                    log.info(TITLE + " Task (no tfreeca) : is not tv show or failed")
+            # tfreeca 아니고 TV show도 아닌경우 자막 다운로드 시도
+            elif TITLE.find(".E") != -1 and STATUS.find("finished") != -1 :
+                DOWNLOAD_PATH=CONFIG.GetDownloadPath()
+                log.info(TITLE + " Task (just sub) : (user) subtitle downloading to " + DOWNLOAD_PATH + TITLE)
+                os.system("/bin/subliminal download -l ko \"" + DOWNLOAD_PATH + TITLE + "\"* >> ./DownloadStationBot-" + str(today_date) + ".log")
+                log.info(TITLE + " Task (just sub) : (user) subtitle downloading to " + DOWNLOAD_PATH + TITLE)
+            elif  STATUS.find("finished") != -1 :
+                log.info(TITLE + " Task : not found rule, but all finished task remove task in download station")
+                TASK_ID=task['id']
+                response = req.get(DEFAULT_URL + TASK_PATH + "?api=" + TASK_API + "&version=" + str(TASK_VERSION) + "&method=delete&id=" + TASK_ID + "&force_complete=false")
+                
 
+
+    LOG_FILE = os.popen("find . -type f -name 'DownloadStationBot-*.log' -mtime +1").read()
+    for logfile in LOG_FILE.splitlines() :
+        os.remove(logfile)
+        log.info("remove logfile : " + logfile )
+       
 
     response = req.get(DEFAULT_URL + AUTH_PATH + "?api=" + AUTH_API + "&version=" + str(AUTH_VERSION) + "&method=logout&session=DownloadStation")
     log.info("LOGOUT ")
