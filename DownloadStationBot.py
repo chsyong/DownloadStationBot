@@ -1,5 +1,6 @@
 #-*- coding: utf-8 -*-
 
+import time
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -208,7 +209,6 @@ def main() :
               # tfreeca 아닌 경우  tfreeca 검색 시도
               else :
                 log.info(TITLE + " Task (create) : searching category in tfreea " )
-                req3=requests.Session()
                 boardList = ['tdrama', 'tent', 'tv', 'tmovie']
                 REAL_TITLE = ""
                 if TITLE.find(".E") != 1 :
@@ -224,7 +224,7 @@ def main() :
                 log.info(REAL_TITLE)
 
                 for board in boardList:
-                    response = req3.get("http://www.tfreeca22.com/board.php?b_id=" + board + "&mode=list&sc=" + REAL_TITLE + "&x=0&y=0")
+                    response = requests.get("http://www.tfreeca22.com/board.php?b_id=" + board + "&mode=list&sc=" + REAL_TITLE + "&x=0&y=0")
                     data = response.text.encode('ISO-8859-1')
                     sp = BeautifulSoup.BeautifulSoup(data)
                     bList = sp.find('table', attrs={'class':'b_list'})
@@ -243,7 +243,7 @@ def main() :
                 if len(CATEGORY) == 0 :
                   REAL_TITLE = REAL_TITLE.rstrip(re.search('(.\d{4}.*)', REAL_TITLE).group(0))
                   for board in boardList:
-                    response = req3.get("http://www.tfreeca22.com/board.php?b_id=" + board + "&mode=list&sc=" + REAL_TITLE + "&x=0&y=0")
+                    response = requests.get("http://www.tfreeca22.com/board.php?b_id=" + board + "&mode=list&sc=" + REAL_TITLE + "&x=0&y=0")
                     data = response.text.encode('ISO-8859-1')
                     sp = BeautifulSoup.BeautifulSoup(data)
                     bList = sp.find('table', attrs={'class':'b_list'})
@@ -261,7 +261,7 @@ def main() :
                 if len(CATEGORY) == 0 :
                   REAL_TITLE = REAL_TITLE.replace(".", "")
                   for board in boardList:
-                    response = req3.get("http://www.tfreeca22.com/board.php?b_id=" + board + "&mode=list&sc=" + REAL_TITLE + "&x=0&y=0")
+                    response = requests.get("http://www.tfreeca22.com/board.php?b_id=" + board + "&mode=list&sc=" + REAL_TITLE + "&x=0&y=0")
                     data = response.text.encode('ISO-8859-1')
                     sp = BeautifulSoup.BeautifulSoup(data)
                     bList = sp.find('table', attrs={'class':'b_list'})
@@ -291,15 +291,15 @@ def main() :
                     REAL_TITLE=TITLE[0:TEMP]
 
                     if CATEGORY == 'tdrama' :
-                        PATH=CONFIG.GetTdramaPath()
+                        PATH=CONFIG.GetTdramaPath() + "/"
                         log.info(TITLE + " Task (create) : target path" + PATH )
                         create_directory(PATH, REAL_TITLE)
                     elif CATEGORY == 'tent' :
-                        PATH = CONFIG.GetTentPath()
+                        PATH = CONFIG.GetTentPath() + "/"
                         log.info(TITLE + " Task (create) : target path" + PATH )
                         create_directory(PATH, REAL_TITLE)
                     elif CATEGORY == 'tv' :
-                        PATH = CONFIG.GetTvPath()
+                        PATH = CONFIG.GetTvPath() + "/"
                         log.info(TITLE + " Task (create) : target path" + PATH )
                         create_directory(PATH, REAL_TITLE)
                 except : 
@@ -312,10 +312,10 @@ def main() :
                     CATEGORY=CATEGORY.group(1)
 
                     if CATEGORY == 'tmovie' :
-                        PATH = CONFIG.GetTmoviePath()
+                        PATH = CONFIG.GetTmoviePath() + "/"
                         create_directory(PATH, REAL_TITLE)
                     #elif CATEGORY == 'tani' :
-                    #    PATH=CONFIG.GetTaniPath()
+                    #    PATH=CONFIG.GetTaniPath()  + "/"
                     #    REAL_TITLE=REAL_TITLE.rstrip(" - ")
                     #    create_directory(PATH, REAL_TITLE)
               # 모든 복수 파일
@@ -343,7 +343,7 @@ def main() :
             elif STATUS.find("finished") != -1 :
               log.info(TITLE  +" Task (move) : finished file check")
               DESTINATION_PATH=data['data']['tasks'][0]['additional']['detail']['destination']
-              DOWNLOAD_PATH=CONFIG.GetDownloadPath()
+              DOWNLOAD_PATH=CONFIG.GetDownloadPath() + "/"
               # 사용자 지정 폴더 없고 
               if DOWNLOAD_PATH.find(DESTINATION_PATH) != -1 :
                 log.info(TITLE + " Task (move) : downloaded to default path ")
@@ -356,7 +356,6 @@ def main() :
                 # tfreeca 아닌 경우  tfreeca 검색 시도
                 else :
                   log.info(TITLE + " Task (move) : searching category in tfreea " )
-                  req3=requests.Session()
                   boardList = ['tdrama', 'tent', 'tv', 'tmovie']
                   REAL_TITLE = ""
                   if TITLE.find(".E") != 1 :
@@ -371,7 +370,7 @@ def main() :
                       REAL_TITLE = os.path.splitext(TITLE)[0]
   
                   for board in boardList:
-                      response = req3.get("http://www.tfreeca22.com/board.php?b_id=" + board + "&mode=list&sc=" + REAL_TITLE + "&x=0&y=0")
+                      response = requests.get("http://www.tfreeca22.com/board.php?b_id=" + board + "&mode=list&sc=" + REAL_TITLE + "&x=0&y=0")
                       data = response.text.encode('ISO-8859-1')
                       sp = BeautifulSoup.BeautifulSoup(data)
                       bList = sp.find('table', attrs={'class':'b_list'})
@@ -389,7 +388,7 @@ def main() :
                   if len(CATEGORY) == 0 :
                     REAL_TITLE = REAL_TITLE.rstrip(re.search('(.\d{4}.*)', REAL_TITLE).group(0))
                     for board in boardList:
-                      response = req3.get("http://www.tfreeca22.com/board.php?b_id=" + board + "&mode=list&sc=" + REAL_TITLE + "&x=0&y=0")
+                      response = requests.get("http://www.tfreeca22.com/board.php?b_id=" + board + "&mode=list&sc=" + REAL_TITLE + "&x=0&y=0")
                       data = response.text.encode('ISO-8859-1')
                       sp = BeautifulSoup.BeautifulSoup(data)
                       bList = sp.find('table', attrs={'class':'b_list'})
@@ -407,7 +406,7 @@ def main() :
                   if len(CATEGORY) == 0 :
                     REAL_TITLE = REAL_TITLE.replace(".", "")
                     for board in boardList:
-                      response = req3.get("http://www.tfreeca22.com/board.php?b_id=" + board + "&mode=list&sc=" + REAL_TITLE + "&x=0&y=0")
+                      response = requests.get("http://www.tfreeca22.com/board.php?b_id=" + board + "&mode=list&sc=" + REAL_TITLE + "&x=0&y=0")
                       data = response.text.encode('ISO-8859-1')
                       sp = BeautifulSoup.BeautifulSoup(data)
                       bList = sp.find('table', attrs={'class':'b_list'})
@@ -432,26 +431,26 @@ def main() :
                     if CATEGORY + "\t" + TITLE not in line :
                         tempfile.write(line)
                     elif CATEGORY == 'tdrama' :
-                        PATH=CONFIG.GetTdramaPath()
+                        PATH=CONFIG.GetTdramaPath() + "/"
                         move_folder(DOWNLOAD_PATH, PATH, TITLE)
                         FLAG=FLAG+1
                     elif CATEGORY == 'tmovie' :
-                        PATH=CONFIG.GetTmoviePath()
+                        PATH=CONFIG.GetTmoviePath() + "/"
                         log.info(TITLE + " Task (move) : (multiple) subtitle downloading to " + DOWNLOAD_PATH + TITLE)
                         os.system("/bin/subliminal download -l ko \"" + DOWNLOAD_PATH + TITLE + "\"* >> ./DownloadStationBot-" + str(today_date) + ".log")
                         log.info(TITLE + " Task (move) : (multiple) subtitle downloaded to " + DOWNLOAD_PATH + TITLE)
                         move_folder(DOWNLOAD_PATH, PATH, TITLE)
                         FLAG=FLAG+1
                     elif CATEGORY == 'tent' :
-                        PATH=CONFIG.GetTentPath()
+                        PATH=CONFIG.GetTentPath() + "/"
                         move_folder(DOWNLOAD_PATH, PATH, TITLE)
                         FLAG=FLAG+1
                     elif CATEGORY == 'tv' :
-                        PATH=CONFIG.GetTvPath()
+                        PATH=CONFIG.GetTvPath() + "/"
                         move_folder(DOWNLOAD_PATH, PATH, TITLE)
                         FLAG=FLAG+1
                     #elif CATEGORY == 'tani' :
-                    #    PATH=CONFIG.GetTaniPath()
+                    #    PATH=CONFIG.GetTaniPath() + "/"
                     #    shutil.move(DOWNLOAD_PATH + TITLE, PATH + TITLE)
                     #    FLAG=FLAG+1
                 infile.close()
@@ -475,17 +474,17 @@ def main() :
                       log.info(TITLE + " Task (move) : This TV SHOW don't have E(episode tag)  : " + TITLE)
                   log.info(TITLE + " Task (move) : This is title  : " + REAL_TITLE)
                   if CATEGORY == 'tdrama' :
-                      TO_PATH=CONFIG.GetTdramaPath()
+                      TO_PATH=CONFIG.GetTdramaPath() + "/"
                       RESULT = move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2)
                       if int(RESULT) == 2:
                           FLAG=FLAG+1
                   elif CATEGORY == 'tent' :
-                      TO_PATH=CONFIG.GetTentPath()
+                      TO_PATH=CONFIG.GetTentPath() + "/"
                       RESULT = move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2)
                       if int(RESULT) == 2:
                           FLAG=FLAG+1
                   elif CATEGORY == 'tv' :
-                      TO_PATH=CONFIG.GetTvPath()
+                      TO_PATH=CONFIG.GetTvPath() + "/"
                       RESULT = move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2)
                       if int(RESULT) == 2:
                           FLAG=FLAG+1
@@ -496,7 +495,7 @@ def main() :
                     REAL_TITLE = os.path.splitext(TITLE)[0]
 
                     if CATEGORY == 'tmovie' :
-                        TO_PATH=CONFIG.GetTmoviePath()
+                        TO_PATH=CONFIG.GetTmoviePath() + "/"
                         RESULT = move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2)
                         if int(RESULT) == 2:
                             log.info(TITLE + " Task (move) : (single) subtitle downloading to " + TO_PATH + REAL_TITLE )
@@ -504,7 +503,7 @@ def main() :
                             log.info(TITLE + " Task (move) : (single) subtitle downloaded to " + TO_PATH + REAL_TITLE )
                             FLAG=FLAG+1
                     #elif CATEGORY == 'tani' :
-                    #    PATH=CONFIG.GetTaniPath()
+                    #    PATH=CONFIG.GetTaniPath() + "/"
                     #    shutil.move(DOWNLOAD_PATH + TITLE, PATH + TITLE)
                     #    FLAG=FLAG+1
                     log.info(TITLE + " Task (move) : single movie or etc file check finished")
@@ -519,14 +518,14 @@ def main() :
                     try :
                       int(CHECK_STRING);
                       REAL_TITLE=TITLE[0:TEMP]
-                      DOWNLOAD_PATH=CONFIG.GetDownloadPath()
-                      TO_PATH=CONFIG.GetTdramaPath()
+                      DOWNLOAD_PATH=CONFIG.GetDownloadPath() + "/"
+                      TO_PATH=CONFIG.GetTdramaPath() + "/"
                       RESULT = move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2)
                       if int(RESULT) == 1 :
-                          TO_PATH=CONFIG.GetTentPath()
+                          TO_PATH=CONFIG.GetTentPath() + "/"
                           RESULT = move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2)
                           if int(RESULT) == 1 :
-                              TO_PATH=CONFIG.GetTvPath()
+                              TO_PATH=CONFIG.GetTvPath() + "/"
                               RESULT = move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2)
                               if int(RESULT) != 1 :
                                   FLAG = FLAG + 1
@@ -543,7 +542,7 @@ def main() :
                     #if FLAG == 1 :
                 # tfreeca 아니고 TV show도 아닌경우 자막 다운로드 시도
                 #elif TITLE.find(".E") == -1 :
-                #    DOWNLOAD_PATH=CONFIG.GetDownloadPath()
+                #    DOWNLOAD_PATH=CONFIG.GetDownloadPath() + "/"
                 #    log.info(TITLE + " Task (just sub) : (user) subtitle downloading to " + DOWNLOAD_PATH + TITLE)
                 #    os.system("/bin/subliminal download -l ko \"" + DOWNLOAD_PATH + TITLE + "\"* >> ./DownloadStationBot-" + str(today_date) + ".log")
                 #    log.info(TITLE + " Task (just sub) : (user) subtitle downloading to " + DOWNLOAD_PATH + TITLE)
@@ -576,7 +575,7 @@ def main() :
               else :
                   log.info(TITLE + " Task : user definition path, finished download")
                   if TITLE.find(".E") == -1 :
-                    DOWNLOAD_PATH=CONFIG.GetDownloadPath()
+                    DOWNLOAD_PATH=CONFIG.GetDownloadPath() + "/"
                     log.info(TITLE + " Task (just sub) : (user) subtitle downloading to " + DOWNLOAD_PATH + TITLE)
                     os.system("/bin/subliminal download -l ko \"" + DOWNLOAD_PATH + TITLE + "\"* >> ./DownloadStationBot-" + str(today_date) + ".log")
                     log.info(TITLE + " Task (just sub) : (user) subtitle downloading to " + DOWNLOAD_PATH + TITLE)
