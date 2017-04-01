@@ -10,7 +10,13 @@ CFG_PATH="./DownloadStationBot.cfg"
 
 function ProcChk()
 {
-    PID=`/bin/ps -ef | /bin/grep "python" | /bin/grep "DownloadStationBot.py" | /usr/bin/awk '{print $2}'`
+    VERSION=`grep majorversion /etc/VERSION | grep 5`
+    PID=""
+	if [ "$VERSION" ] ; then
+	    PID=`/bin/ps | /bin/grep "python" | /bin/grep "DownloadStationBot.py" | /usr/bin/awk '{print $2}'`
+	else
+	    PID=`/bin/ps -ef | /bin/grep "python" | /bin/grep "DownloadStationBot.py" | /usr/bin/awk '{print $2}'`
+	fi;
     if [ "$PID" ] ;  then
         printf "%16s : [36m[1mRunning[0m\n" "XPEnology DownloadStationBot";
     else
@@ -21,8 +27,14 @@ function ProcChk()
 function BOTStart()
 {
     echo "[36m[1mStarting XPEnology DownloadStationBot...[0m"
-    PID=`/bin/ps -ef | /bin/grep "python" | /bin/grep "DownloadStationBot.py" | /usr/bin/awk '{print $2}'`
 
+    VERSION=`grep majorversion /etc/VERSION | grep 5`
+    PID=""
+	if [ "$VERSION" ] ; then
+	    PID=`/bin/ps | /bin/grep "python" | /bin/grep "DownloadStationBot.py" | /usr/bin/awk '{print $2}'`
+	else
+	    PID=`/bin/ps -ef | /bin/grep "python" | /bin/grep "DownloadStationBot.py" | /usr/bin/awk '{print $2}'`
+	fi;
     if [ "$PID" ]; then
         echo "XPEnology DownloadStationBot BOT Already Running"
         # exit 1
@@ -38,9 +50,13 @@ function BOTStart()
 function BOTStop()
 {
     echo "XPEnology DownloadStationBot safe stop Trying"
-
-    PID=`/bin/ps -ef | /bin/grep "python" | /bin/grep "DownloadStationBot.py" | /usr/bin/awk '{print $2}'`
-
+    VERSION=`grep majorversion /etc/VERSION | grep 5`
+    PID=""
+	if [ "$VERSION" ] ; then
+	    PID=`/bin/ps | /bin/grep "python" | /bin/grep "DownloadStationBot.py" | /usr/bin/awk '{print $2}'`
+	else
+	    PID=`/bin/ps -ef | /bin/grep "python" | /bin/grep "DownloadStationBot.py" | /usr/bin/awk '{print $2}'`
+	fi;
     if [ -z "$PID" ]; then
         echo "XPEnology DownloadStationBot Already Stop"
         # exit 1
