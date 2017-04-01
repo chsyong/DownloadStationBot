@@ -1,4 +1,5 @@
 # DownloadStationBot
+시놀로지 다운로드 스테이션으로 통해 
 다운로드 받는 파일을 자동으로 정리하는 스크립트를 만들어 봤습니다.
 사용하실 분이 있을지 모르겠지만 공유 해봅니다~
 <br/><br/>
@@ -6,27 +7,10 @@
 여기저기 복사 붙여 넣기 / 예외처리 안함 / 로그 대충 생성으로 인해 많이 지저분 합니다.
 그리고 다운로드 받는 소스가 TV쇼 인지 영화인지 구분할 방법을 못찾아서…
 <br/><br/>
-티프리카 RSS 등록 후 사용한다는 기준 ( 즉 다운로드 받는 URL에  tfreeca 가 존재해야 함)에서만 동작합니다.
-
-(제가 사용하므로….)
-
-ex) http://xxxxxxx/tfreeca/rss.php?bo_table=tdrama&k=720p-next&page=1
-
- <br/><br/>
-
-이래 저래 제약 사항도 많고 잘 동작할지도 모르겠지만 의견 주시면 반영하거나 직접 수정해 주셔도 됩니다. ㅋ
-
-그리고 분류할 좋은 방법 있으시면 알려주세요~
-
- <br/><br/>
-
  
-
-<h2>파일 다운로드</h2>
-
-http://daewoo.duckdns.org:8081/07_Share/NAS/XPEnology/DownloadStationBot.tar
-
 <h3>파일 설명 </h3>
+
+setup.sh                      : 초기 설치파일
 
 DownloadStationBot.sh         : 시놀 작업 관리자에 등록할 스크립트
 
@@ -34,29 +18,40 @@ DownloadStationBot.py         : 메인 파이썬 스크립트
 
 DownloadStationBot.cfg        : 환경 설정 파일
 
-Config.py                           : 설정 파일 불러오는 스크립트
+Config.py                     : 설정 파일 불러오는 스크립트
 
-DownloadStationBot-xxx.log  : 로그파일
+DownloadStationBot-xxx.log    : 로그파일
 
-FOLDER_LIST                       : 다운로드 받는 파일이 단일 파일이 아닌 경우를 위한 임시 저장 파일
+FOLDER_LIST                   : 다운로드 받는 파일이 단일 파일이 아닌 경우를 위한 임시 저장 파일
 
-FOLDER_LIST.tmp                 : 다운로드 받는 파일이 단일 파일이 아닌 경우를 위한 임시 저장 파일2
+FOLDER_LIST.tmp               : 다운로드 받는 파일이 단일 파일이 아닌 경우를 위한 임시 저장 파일2
+
+bash                          : shell script 실행 bash
 
  
+<br/><br/>
+<h2>사전 조건</h2>
 
+1. 시놀로지 package 센터에서 아래 패키지 설치
+git server
+python 2
+python module
  
 
+<br/><br/>
 <h2>사용 방법</h2>
 
-1. 파일을 적당한 경로에 압축 해제
+1. 시놀로지에 ssh 접속 후 DownloadStationBot 다운 받을 경로로 이동후 아래 명령으로 다운로드
 
-ex) /volume1/homes/xxx/DownloadStationBot 에 DownloadStationBot.tar 을 넣었다고 가정
+git clone git://github.com/chsyong/DownloadStationBot  
 
-cd /volume1/homes/xxx/DownloadStationBot; tar xvf DownloadStationBot.tar
+2. DownloadStationBot 폴더 아래 파일 중 setup.sh 실행하여 필요한 유틸들 다운로드 및 설치 진행
 
-2. DownloadStationBot.sh 에서 python 경로 확인 ( 대부분 수정할 필요 없을 듯 )
+cd DownloadStationBot
+./setup.sh
 
-3. DownloadStationBot.cfg  설정 파일 수정
+3. DownloadStationBot.cfg  설정 파일 자신의 시놀로지 정보와 다운로드 후 옮겨지 디렉토리 지정
+(영화,드라마,예능 등 큰 카테고리의 폴더를 지정해주고 미리 폴더가 생성되어 있어야 함)
 
 4. 시놀로지 작업 관리자에 1분(?) 주기 실행으로 작업 등록
 
@@ -72,7 +67,6 @@ ex) cd /volume1/homes/xxx/DownloadStationBot;./DownloadStationBot.sh
 
 <h2>기능 / 동작 방식</h2>
 
-1. 티프리카 RSS를 통해서 다운 받는 경우만 동작
 
 2. 애니는 RSS 다운로드가 안되서 테스트 못하고 예능, 드라마, 영화 만 동작할 듯 합니다.
 
@@ -97,42 +91,3 @@ ex) cd /volume1/homes/xxx/DownloadStationBot;./DownloadStationBot.sh
  
 
  
-
-<h2>참고 1</h2>
-
-subliminal 설치는 2번까지만 하면됩니다. (3번은 수동으로 받을때 테스트해보시면 됩니다.)
-
-1. subliminal  설치 파일을 다운로드 받음
-
-git clone -b master https://github.com/Diaoul/subliminal /tmp/subliminal
-
-2. subliminal 설치
-
-cd /tmp/subliminal
-/bin/python setup.py install  ( 파이썬은 자신의 파이선 위치, 왠만해선 환경 변수 잡혀있어서 경로는 필요 없음 )
-
-3. 자막 다운로드
-
-/bin/subliminal download -l ko “”/volume2/Media/”*  ( 이렇게 하면 /volume2/Media 경로 아래에 모든 파일에 대해 자막 검색 다운로드 )
-
-근데 한글 자막 다운로드가 잘 안되는듯, 좀 더 써봐야 겠네요
-
- 
-
-<h2>참고 2</h2>
-
-다운로드 스테이션 작업 정리시 오류 나서 찾아보니
-
-force_complete=false로 해야한다함;
-
-api 예시에는 true 되어 있던데….
-
-( https://forum.synology.com/enu/viewtopic.php?t=116519 )
-
-ssh에서는 os.mkdirs 같은 명령이 먹는데 시놀 작업 관리자 등록하면 동작안함 -0-;
-
- 
-
-<h2>참고 3</h2>
-
-헤놀 6.1에서 혼자서만 테스트 해봤고 저도 실 사용기간 거의 없습니다;;;
