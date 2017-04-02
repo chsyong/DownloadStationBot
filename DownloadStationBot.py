@@ -252,33 +252,29 @@ def main() :
             log.info("starting check it")
             log.info("status : " + STATUS)
 
-            # 다운로드 작업에 대해서는 폴더 생성
+            # 다중 파일의 경우 다운로드 할때 체크하여 임시 파일에 저장
             if STATUS.find("downloading") != -1 and TITLE.find(".php") == -1 : 
-              log.info("(create) : downloading file check")
+              log.info("(downloading) : downloading file check")
               FILES_COUNT=data['data']['tasks'][0]['additional']['file']
-              log.info("(create) : " + str(len(FILES_COUNT)) +  " files")
+              log.info("(downloading) : " + str(len(FILES_COUNT)) +  " files")
 
               f = open("FOLDER_LIST", 'r')
               for line in f :
                   if TITLE in line :
-                      log.info(TITLE +" Task (create) : already exists in temp file for fast")
+                      log.info("(downloading) : already exists in temp file for fast")
               f.close()
 
               CATEGORY, REAL_TITLE, TO_PATH = find_category_title_path(TITLE, "create", URI)
 
-              # 단일 파일
-              if len(CATEGORY) > 0 and len(FILES_COUNT) == 1 :
-                create_directory(TO_PATH, REAL_TITLE)
-
               # 모든 복수 파일
-              elif len(FILES_COUNT) != 1 :
-                log.info("(create) : multiple file check start")
+              if len(FILES_COUNT) != 1 :
+                log.info("(downloading) : multiple file check start")
                 if len(CATEGORY) > 0 :
                   FLAG = 1
                   f = open("FOLDER_LIST", 'r')
                   for line in f :
                       if CATEGORY + "\t" + TITLE in line :
-                          log.info("(create) : already registered in temp file")
+                          log.info("(downloading) : already registered in temp file")
                           FLAG = FLAG + 1
                   f.close()
                   if FLAG == 1 :
@@ -286,27 +282,25 @@ def main() :
                       data = CATEGORY + "\t" + TITLE + "\n"
                       f.write(data)
                       f.close()
-                      log.info(TITLE +" Task (create) : new saved in temp file for folder move")
+                      log.info("(downloading) : new saved in temp file for folder move")
                 else :
-                  log.info("(create) : failed to create folder because not found category" )
-              else : 
-                  log.info("(create) : failed to create folder" )
+                  log.info("(downloading) : failed to register folder because not found category" )
 
 
 
             # 다운 완료 된 파일 이동 처리
             elif STATUS.find("finished") != -1 :
-              log.info(TITLE  +" Task (move) : finished file check")
+              log.info(TITLE  +" Task (finished) : finished file check")
               DESTINATION_PATH=data['data']['tasks'][0]['additional']['detail']['destination']
               DOWNLOAD_PATH=CONFIG.GetDownloadPath() + "/"
               # 사용자 지정 폴더 없고 
               if DOWNLOAD_PATH.find(DESTINATION_PATH) != -1 :
-                log.info("(move) : downloaded to default path ")
+                log.info("(finished) : downloaded to default path ")
 
                 CATEGORY, REAL_TITLE, TO_PATH = find_category_title_path(TITLE, "move", URI)
 
                 # 복수 파일 다운로드 시 이동 처리 시작
-                log.info("(move) : multiple file check start")
+                log.info("(move) : (multiple) file check start")
                 infile = file('FOLDER_LIST')
                 tempfile = open('FOLDER_LIST.tmp', 'w')
                 FLAG=1
@@ -328,6 +322,9 @@ def main() :
 
                 # FLAG가 1인 경우(즉 복수 파일에서 처리되지 못한것은) 단일 파일로  처리
                 if len(CATEGORY) > 0  and FLAG == 1 :
+
+                    create_directory(TO_PATH, REAL_TITLE)
+
                     log.info("(move) : single file check start")
 
                     RESULT = move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2)
