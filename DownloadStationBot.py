@@ -264,10 +264,9 @@ def main() :
                       log.info("(downloading) : already exists in temp file for fast")
               f.close()
 
-              CATEGORY, REAL_TITLE, TO_PATH = find_category_title_path(TITLE, "create", URI)
-
               # 모든 복수 파일
               if len(FILES_COUNT) != 1 :
+                CATEGORY, REAL_TITLE, TO_PATH = find_category_title_path(TITLE, "downloading", URI)
                 log.info("(downloading) : multiple file check start")
                 if len(CATEGORY) > 0 :
                   FLAG = 1
@@ -290,7 +289,7 @@ def main() :
 
             # 다운 완료 된 파일 이동 처리
             elif STATUS.find("finished") != -1 :
-              log.info(TITLE  +" Task (finished) : finished file check")
+              log.info("(finished) : finished file check")
               DESTINATION_PATH=data['data']['tasks'][0]['additional']['detail']['destination']
               DOWNLOAD_PATH=CONFIG.GetDownloadPath() + "/"
               # 사용자 지정 폴더 없고 
@@ -323,9 +322,9 @@ def main() :
                 # FLAG가 1인 경우(즉 복수 파일에서 처리되지 못한것은) 단일 파일로  처리
                 if len(CATEGORY) > 0  and FLAG == 1 :
 
-                    create_directory(TO_PATH, REAL_TITLE)
-
                     log.info("(move) : single file check start")
+
+                    create_directory(TO_PATH, REAL_TITLE)
 
                     RESULT = move_file(DOWNLOAD_PATH, TO_PATH, TITLE, REAL_TITLE, FILE_VERSION, req2)
 
