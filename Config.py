@@ -16,6 +16,8 @@ class Config(object):
     tv_path = ""
     tent_path = ""
     tmovie_path = ""
+    tdocu_path = ""
+    mid_path = ""
     download_path = ""
 
     def __init__(self, *args, **kwargs):
@@ -34,6 +36,8 @@ class Config(object):
         self.tv_path = config.get('DIRECTORY', 'tv')
         self.tent_path = config.get('DIRECTORY', 'tent')
         self.tmovie_path = config.get('DIRECTORY', 'tmovie')
+        self.tdocu_path = config.get('DIRECTORY', 'torrent_docu')
+        self.mid_path = config.get('DIRECTORY', 'torrent_mid')
 
 
     def GetAccount(self):
@@ -68,3 +72,9 @@ class Config(object):
 
     def GetTmoviePath(self):
         return self.tmovie_path
+
+    def GetDocuPath(self):
+        return self.tdocu_path
+
+    def GetMidPath(self):
+        return self.mid_path

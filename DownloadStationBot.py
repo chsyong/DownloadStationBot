@@ -125,7 +125,7 @@ def find_category_title_path(TITLE, TASK, URI) :
         CATEGORY=CATEGORY.group(1)
     # tfreeca 아닌 경우  tfreeca 검색 시도
     else :
-      boardList = ['torrent_tv', 'torrent_movie', 'torrent_variety', 'torrent_docu', 'torrent_mid', 'torrent_ani']
+      boardList = ['torrent_variety', 'torrent_tv', 'torrent_movie', 'torrent_docu', 'torrent_mid', 'torrent_ani']
       for board in boardList:
           response = requests.get("https://torrentkim10.net/bbs/s.php?k=" + REAL_TITLE + "&b=" + board + "&q=")
           sp = BeautifulSoup.BeautifulSoup(response.text)
@@ -182,6 +182,108 @@ def find_category_title_path(TITLE, TASK, URI) :
         TO_PATH = CONFIG.GetTaniPath() + "/"
 
     return CATEGORY, REAL_TITLE, TO_PATH
+
+def download_subtitle (TO_PATH, TITLE, FOLDER) :
+    if FOLDER == 1 :
+        file_list = [
+            d for d in (os.path.join(TO_PATH, d1) for d1 in os.listdir(TO_PATH))
+            if os.path.isfile(d)
+        ]
+        for d in file_list :
+            fileType = os.path.splitext(d)[1]
+            if fileType == '.avi' or fileType == '.mkv' or fileType == '.mp4' or fileType == '.wmv' :
+                CONDITION = find_condition(d.lstrip(TO_PATH))
+                find_sub(TO_PATH, CONDITION, d.lstrip(TO_PATH))
+    else :
+        CONDITION = find_condition(TITLE)
+        find_sub(TO_PATH, CONDITION, TITLE)
+
+def find_sub(TO_PATH, CONDITION, TITLE) :
+  req = requests.Session()
+  res = req.get('http://www.google.co.kr/search?q=' + CONDITION)
+  sp = BeautifulSoup.BeautifulSoup(res.text)
+  searchList = sp.find('div', attrs={'id':'search'})
+  hrefList = searchList.findAll('h3', attrs={'class':'r'})
+  for href in hrefList :
+      FLAG = 1
+      url = href.a["href"]
+      if url.find("cineaste.co.kr/bbs/board.php") != -1 :
+          res = req.get("http://www.google.co.kr" + url)
+          sp = BeautifulSoup.BeautifulSoup(res.text)
+          if sp.find('div', attrs={'class':'font-12 text-muted'}) != None :
+            lang =  sp.find('div', attrs={'class':'font-12 text-muted'}).text.strip()
+            if lang.find('한글') != -1 :
+              realFileLink = ""
+              fileType = ""
+              fileFullName = ""
+              fileLinkList = sp.findAll('a', attrs={'class':'list-group-item break-word view_file_download at-tip'})
+              if len(fileLinkList) > 1 :
+                for fileLink in fileLinkList :
+                    if fileLink.text.upper().find("KOR") != -1 :
+                        realFileLink = fileLink["href"]
+                        fileFullName = fileLink.text
+                        break
+                for fileLink in fileLinkList :
+                    if fileLink.text.find("srt") != -1 :
+                        realFileLink = fileLink["href"]
+                        fileFullName = fileLink.text
+                    if len(fileFullName) == 0 and fileLink.text.find("smi") != -1 :
+                        realFileLink = fileLink["href"]
+                        fileFullName = fileLink.text
+              else :
+                realFileLink = fileLinkList[0]["href"]
+                fileFullName = fileLinkList[0].text
+                fileFullName = fileLinkList[0].text
+
+              index = str(fileFullName).rindex(" (")
+              Title = str(fileFullName)[0:index]
+              fileType = os.path.splitext(Title)[1]
+
+              realFileLink = realFileLink.replace("board.php", "download.php")
+              url = realFileLink + "&ds=1&js=on"
+
+              print (url)
+              print(os.path.splitext(Title)[0])
+              print(fileType)
+
+              response = req.get(url, stream=True)
+              with open(TO_PATH + os.path.splitext(TITLE)[0]+ fileType, 'wb') as out_file:
+                  shutil.copyfileobj(response.raw, out_file)
+              del response
+
+              FLAG = FLAG + 1
+              if fileType == '.rar' :
+                  resultList = os.popen('unrar e ' + sourceName+fileType).read()
+                  #for result in resultList.splitlines() :
+                    #if result.find("Extracting") != -1 and result.find("OK") != -1 :
+                        #result = result.strip().lstrip("Extracting")
+                        #index = result.rindex(".")
+                        #result = result[0:index+5].strip()
+                        #realFileType = os.path.splitext(result)[1]
+                        #os.popen('mv \"' + result + "\" \"" + sourceName + realFileType + "\"")
+              if fileType == '.zip' :
+                  resultList = os.popen('7z l \"' + sourceName+fileType + "\"").read()
+                  os.popen('7z e \"' + sourceName+fileType + "\"")
+                  #for result in resultList.splitlines() :
+                  #    if result.find(".smi") != -1 or result.find(".srt") != -1 :
+                  #        result = result[53:].strip()
+                  #        realFileType = os.path.splitext(result)[1]
+                  #        os.popen('mv \"' + result + "\" \"" + sourceName + realFileType + "\"")
+      if FLAG == 2 :
+          break
+
+def find_condition(sourceName) :
+
+    sourceName = os.path.splitext(sourceName)[0]
+    exceptList = ['hdts', 'ac3', 'x264', 'hdrip', 'dts', '720p', '360p', '1080p', 'xvid', 'korean', 'blueray', '.kor.', 'aac', 'bluray', 'webrip', 'hdrip']
+    sourceName = sourceName.lower()
+    for ex in exceptList :
+        index = sourceName.find(ex)
+        if index != -1 :
+            sourceName = sourceName[0:index]
+    sourceName = sourceName.strip().replace(" ", "+").replace("_", "+").replace("-","+").replace("_", "+")+"+씨네스트"
+
+    return sourceName
 
 def main() :
     # LOG Setting
@@ -310,9 +412,10 @@ def main() :
                         move_folder(DOWNLOAD_PATH, TO_PATH, TITLE)
                         FLAG=FLAG+1
                         if CATEGORY == 'tmovie' or CATEGORY == 'tani' :
-                            log.info("(move) : (multiple) subtitle downloading to " + DOWNLOAD_PATH + TITLE)
-                            os.system("/bin/subliminal download -l ko \"" + DOWNLOAD_PATH + TITLE + "\"* >> ./DownloadStationBot-" + str(today_date) + ".log")
-                            log.info("(move) : (multiple) subtitle downloaded to " + DOWNLOAD_PATH + TITLE)
+                            log.info("(move) : (multiple) subtitle downloading to " + TO_PATH + TITLE)
+                            os.system("/bin/subliminal download -l ko \"" + TO_PATH + TITLE + "\"* >> ./DownloadStationBot-" + str(today_date) + ".log")
+                            log.info("(move) : (multiple) subtitle downloaded to " + TO_PATH + TITLE)
+                            download_subtitle (TO_PATH, TITLE, 1)
                 infile.close()
                 tempfile.close()
                 os.popen("cp -p  FOLDER_LIST.tmp  FOLDER_LIST ")
@@ -335,6 +438,7 @@ def main() :
                         log.info("(move) : (single) subtitle downloading to " + TO_PATH + REAL_TITLE )
                         os.system("/bin/subliminal download -l ko \"" + TO_PATH + REAL_TITLE + "\"* >> ./DownloadStationBot-" + str(today_date) + ".log")
                         log.info("(move) : (single) subtitle downloaded to " + TO_PATH + REAL_TITLE )
+                        download_subtitle (TO_PATH, TITLE, 0)
                     log.info("(move) : single file check finished")
 
                 # 여전히 못찾은 경우 
@@ -375,6 +479,7 @@ def main() :
                     log.info("(just sub) : subtitle downloading to " + DOWNLOAD_PATH + TITLE)
                     os.system("/bin/subliminal download -l ko \"" + DOWNLOAD_PATH + TITLE + "\"* >> ./DownloadStationBot-" + str(today_date) + ".log")
                     log.info("(just sub) : subtitle downloading to " + DOWNLOAD_PATH + TITLE)
+                    download_subtitle (DOWNLOAD_PATH, TITLE, 0)
 
                 #  log.info("(move) : single not downloaded in tfreeca but search in tfreea " )
                 #  req3=requests.Session()
@@ -390,10 +495,9 @@ def main() :
               else :
                   log.info(": user definition path, finished download")
                   if TITLE.find(".E") == -1 :
-                    DOWNLOAD_PATH=CONFIG.GetDownloadPath() + "/"
-                    log.info("(just sub) : (user) subtitle downloading to " + DOWNLOAD_PATH + TITLE)
-                    os.system("/bin/subliminal download -l ko \"" + DOWNLOAD_PATH + TITLE + "\"* >> ./DownloadStationBot-" + str(today_date) + ".log")
-                    log.info("(just sub) : (user) subtitle downloading to " + DOWNLOAD_PATH + TITLE)
+                    log.info("(just sub) : (user) subtitle downloading to " + DESTINATION_PATH + TITLE)
+                    os.system("/bin/subliminal download -l ko \"" + DESTINATION_PATH + TITLE + "\"* >> ./DownloadStationBot-" + str(today_date) + ".log")
+                    log.info("(just sub) : (user) subtitle downloading to " + DESTINATION_PATH + TITLE)
                   TASK_ID=task['id']
                   response = req.get(DEFAULT_URL + TASK_PATH + "?api=" + TASK_API + "&version=" + str(TASK_VERSION) + "&method=delete&id=" + TASK_ID + "&force_complete=false")
                   log.info(": user definition path, finished download and remove task in download station")
